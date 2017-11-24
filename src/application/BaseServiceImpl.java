@@ -4,15 +4,18 @@ import java.lang.reflect.ParameterizedType;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.Persistence;
 import javax.persistence.PersistenceContext;
 
+import javafx.concurrent.Task;
+import javafx.scene.chart.XYChart.Data;
 import model.Nagranie;
 
-public class BaseServiceImpl<ID, T> implements BaseService<ID, T> {
+public class BaseServiceImpl<ID, T> extends Task implements BaseService<ID, T> {
 
     @PersistenceContext
     EntityManagerFactory emfactory = Persistence.createEntityManagerFactory("tester");
@@ -131,13 +134,13 @@ public class BaseServiceImpl<ID, T> implements BaseService<ID, T> {
 
             List<Object> wynik = entitymanager.createNativeQuery("SELECT * FROM TABLE("
                 + nazwaPakietu
-                + ".generuj_azz08(:a_nagranie_id, :a_zaklad_id, -1 ,:a_data_od,  :a_data_do, :a_uklad_id, :a_osoba_id ))")
-                .setParameter("a_nagranie_id", nagranie)
-                .setParameter("a_zaklad_id", zaklad)
-                .setParameter("a_data_od", dataOd)
-                .setParameter("a_data_do", dataDo)
-                .setParameter("a_uklad_id", uklad)
-                .setParameter("a_osoba_id", osoba)
+                + ".generuj_azz08(?, ?, -1 ,?, ?, ?, ?))")
+                .setParameter(1, nagranie)
+                .setParameter(2, zaklad)
+                .setParameter(3, dataOd)
+                .setParameter(4, dataDo)
+                .setParameter(5, uklad)
+                .setParameter(6, osoba)
                 .getResultList();
             entitymanager.flush();
         }
@@ -151,9 +154,9 @@ public class BaseServiceImpl<ID, T> implements BaseService<ID, T> {
             entitymanager.getTransaction().begin();
         List<Object[]> wynik = (List<Object[]>) entitymanager
             .createNativeQuery("select nagranie_Id, count(distinct osoba_Id) liczba "
-                + " from pczk_v_dostepne_osoby_raportu where zaklad_Id = :zaklad "
+                + " from pczk_v_dostepne_osoby_raportu where zaklad_Id = ? "
                 + " group by nagranie_id order by 2 desc ")
-            .setParameter("zaklad", zaklad)
+            .setParameter(1, zaklad)
             .getResultList();
         List<Nagranie> lista = new ArrayList<>(wynik.size());
         for (Object[] obj : wynik) {
@@ -167,10 +170,71 @@ public class BaseServiceImpl<ID, T> implements BaseService<ID, T> {
     public List<Long> pobierzIdentyfikatoryOsob(Long nagranie) {
         List<Long> wynik = (List<Long>) entitymanager
             .createNativeQuery("select osoba_id "
-                + " from pczk_v_dostepne_osoby_raportu where nagranie_id = :nagranie  ")
-            .setParameter("nagranie", nagranie)
+                + " from pczk_v_dostepne_osoby_raportu where nagranie_id = ?  ")
+            .setParameter(1, nagranie)
             .getResultList();
         return wynik;
     }
 
+    @Override
+    protected Object call() throws Exception {
+        // try {
+        // Long it = 0L;
+        // for (byte[] blok : dane) {
+        // odbiorca.przetworz(szyfrujBlok(klucz.pobierz(), blok, szyfruj));
+        //
+        // updateProgress(it++, dane.rozmiar() / 8);
+        // }
+        // } finally {
+        // try {
+        // odbiorca.close();
+        // updateProgress(1, 1);
+        // } catch (Exception e) {
+        // throw new RuntimeException(e);
+        // }
+        // }
+        // System.out.println("Koniec ");
+        return wykonaj();
+    }
+
+    @Override
+    public Boolean wykonaj() {
+        Long it = 0L;
+
+        try {
+            pasekPostepu(0L);
+            updateMessage("new message");
+//            for (byte[] blok : dane) {
+//                odbiorca.przetworz(szyfrujBlok(klucz.pobierz(), blok, szyfruj));
+//                it++;
+//                if (it % daneRozmiarProcent == 0){
+//                    pasekPostepu(it);
+//                }
+//            }
+        } finally {
+            try {
+//                odbiorca.close();
+//                pasekPostepu(daneRozmiar);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        }
+        //  System.out.println("Koniec ");
+        return true;
+    }
+
+    protected void pasekPostepu(long wykonanie) {
+        try {
+//            updateProgress(wykonanie, liczbaWykonan);
+        } catch (Exception e) {
+
+        }
+
+    }
+
+    @Override
+    public ConcurrentLinkedQueue<Data<Double, Double>> getData() {
+        // TODO Auto-generated method stub
+        return null;
+    }
 }
