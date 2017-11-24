@@ -6,8 +6,6 @@ import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 
 import javafx.animation.AnimationTimer;
 import javafx.beans.value.ChangeListener;
@@ -15,6 +13,8 @@ import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
+import javafx.concurrent.WorkerStateEvent;
+import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
@@ -336,22 +336,34 @@ public class Controller {
 //        }
     }
 
+    @SuppressWarnings("unchecked")
     @FXML
     public void wybranoZaklad() {
         Long zaklad = comboZaklad.getValue();
         if (zaklad != null) {
-            ExecutorService executor = Executors.newSingleThreadExecutor();
+//            ExecutorService executor = Executors.newSingleThreadExecutor();
             service.funkcja(0);
             service.zaklad(zaklad);
+            service.addEventHandler(WorkerStateEvent.WORKER_STATE_SUCCEEDED,
+                new EventHandler<WorkerStateEvent>() {
+                    @Override
+                    public void handle(WorkerStateEvent t) {
+                        if (service.getFunkcja() == 0) {
+                            ObservableList<Nagranie> nagrania2 = FXCollections.observableArrayList((List<Nagranie>) service.getValue());//returns 2 or raises an exception if the thread dies, so safer
+                            comboNagranie.setItems(nagrania2);
+                            comboNagranie.setDisable(false);
+                        }
+                    }
+                });
             Thread t2 = new Thread(service);
             t2.start();
 //            Future<Object> future = executor.submit(service);
-            List<Nagranie> n = (List<Nagranie>) service.getValue();
-            ObservableList<Nagranie> nagrania2 = FXCollections.observableArrayList((List<Nagranie>) service.getValue());//returns 2 or raises an exception if the thread dies, so safer
-            executor.shutdown();
+//            List<Nagranie> n = (List<Nagranie>) service.getValue();
+//            ObservableList<Nagranie> nagrania2 = FXCollections.observableArrayList((List<Nagranie>) service.getValue());//returns 2 or raises an exception if the thread dies, so safer
+//            executor.shutdown();
 //            ObservableList<Nagranie> nagrania2 = FXCollections.observableArrayList(service.pobierzNagrania(zaklad));
-            comboNagranie.setItems(nagrania2);
-            comboNagranie.setDisable(false);
+//            comboNagranie.setItems(nagrania2);
+//            comboNagranie.setDisable(false);
         } else {
             comboNagranie.setItems(null);
             comboNagranie.setDisable(true);

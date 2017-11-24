@@ -161,4 +161,7 @@ public class Serwis extends Task  {
         // TODO Auto-generated method stub
         return null;
     }
+    public Integer getFunkcja() {
+        return funkcja;
+    }
 }
