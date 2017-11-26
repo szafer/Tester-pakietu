@@ -8,6 +8,6 @@
 			<attribute name="owner.project.facets" value="jpt.jpa"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="lib" path="C:/Users/mszafraniec/Downloads/ojdbc14.jar"/>
+	<classpathentry kind="lib" path="/home/marek/wildfly-10.1.0.Final/modules/system/layers/base/com/oracle/main/ojdbc7.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

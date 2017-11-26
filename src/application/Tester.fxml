@@ -9,13 +9,13 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.layout.AnchorPane?>
 
-<AnchorPane fx:id="mainPanel" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="496.0" prefWidth="676.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="application.Controller">
+<AnchorPane fx:id="mainPanel" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="600.0" minWidth="676.0" prefHeight="600.0" prefWidth="676.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="application.TesterController">
    <children>
-      <SplitPane dividerPositions="0.5" orientation="VERTICAL" prefHeight="496.0" prefWidth="675.0">
+      <SplitPane dividerPositions="0.5, 0.5" orientation="VERTICAL" prefHeight="600.0" prefWidth="675.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
         <items>
-            <SplitPane dividerPositions="0.5" prefHeight="160.0" prefWidth="200.0">
+            <SplitPane dividerPositions="0.5" prefHeight="160.0" prefWidth="200.0" SplitPane.resizableWithParent="false">
                <items>
-                  <GridPane prefHeight="219.0" prefWidth="302.0">
+                  <GridPane fx:id="panelParametry" prefHeight="219.0" prefWidth="302.0">
                     <columnConstraints>
                       <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
                       <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
@@ -24,8 +24,6 @@
                       <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
                       <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
                       <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
-                        <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
-                        <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
                         <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
                         <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
                         <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
@@ -54,12 +52,7 @@
                               <Insets right="5.0" />
                            </GridPane.margin></ComboBox>
                         <Label text="Liczba iteracji: " GridPane.halignment="RIGHT" GridPane.rowIndex="8" />
-                        <TextField fx:id="nbrLiczbaIteracji" maxWidth="40.0" prefWidth="40.0" promptText="0-10" GridPane.columnIndex="1" GridPane.rowIndex="8" />
-                        <Button fx:id="btnZapisz" mnemonicParsing="false" onAction="#zapisz" prefHeight="25.0" prefWidth="100.0" text="Zapisz" GridPane.rowIndex="9">
-                           <GridPane.margin>
-                              <Insets left="5.0" />
-                           </GridPane.margin></Button>
-                        <TextField fx:id="txtZapiszFile" prefHeight="25.0" prefWidth="269.0" promptText="Wybierz ścieżkę eksportu danych" GridPane.columnSpan="2" GridPane.rowIndex="10" />
+                        <TextField fx:id="nbrLiczbaIteracji" maxWidth="50.0" prefWidth="50.0" promptText="0-10" GridPane.columnIndex="1" GridPane.rowIndex="8" />
                         <ComboBox fx:id="comboNagranie" onAction="#wybranoNagranie" prefWidth="150.0" promptText="Wybierz nagranie" GridPane.columnIndex="1" GridPane.rowIndex="3">
                            <opaqueInsets>
                               <Insets right="5.0" />
@@ -71,14 +64,48 @@
                         <Label text="Testowany pakiet: " GridPane.halignment="RIGHT" GridPane.rowIndex="7" />
                      </children>
                   </GridPane>
-                  <TextArea fx:id="txtWynik" prefHeight="396.0" prefWidth="200.0" promptText="Tutaj wypisywane są wyniki badań" />
+                  <BorderPane fx:id="panelLog" prefHeight="200.0" prefWidth="200.0">
+                     <center>
+                        <TextArea fx:id="txtWynik" prefHeight="396.0" prefWidth="200.0" promptText="Tutaj wypisywane są wyniki badań" BorderPane.alignment="CENTER" />
+                     </center>
+                     <bottom>
+                        <ToolBar nodeOrientation="RIGHT_TO_LEFT" prefHeight="40.0" prefWidth="200.0" BorderPane.alignment="CENTER">
+                          <items>
+                            <Button fx:id="btnWyczysc" mnemonicParsing="false" onAction="#wyczysc" text="Wyczyść" />
+                              <Button fx:id="btnZapisz" mnemonicParsing="false" onAction="#zapisz" prefHeight="25.0" prefWidth="100.0" text="Eksportuj" />
+                          </items>
+                        </ToolBar>
+                     </bottom>
+                  </BorderPane>
                </items>
             </SplitPane>
-            <ToolBar prefHeight="40.0" prefWidth="459.0">
+            <BorderPane maxHeight="130.0" minHeight="130.0" prefHeight="130.0" prefWidth="674.0">
+               <bottom>
+                  <Label fx:id="lblProgres" alignment="CENTER" contentDisplay="CENTER" minWidth="0.0" prefHeight="15.0" prefWidth="200.0" BorderPane.alignment="CENTER">
+                     <font>
+                        <Font size="16.0" />
+                     </font>
+                     <BorderPane.margin>
+                        <Insets bottom="15.0" />
+                     </BorderPane.margin>
+                  </Label>
+               </bottom>
+               <top>
+                  <ProgressIndicator fx:id="piProgres" progress="0.0" BorderPane.alignment="CENTER">
+                     <BorderPane.margin>
+                        <Insets top="5.0" bottom="5.0"/>
+                     </BorderPane.margin>
+                  </ProgressIndicator>
+               </top>
+               <center>
+                  <ProgressBar fx:id="progresBar" prefHeight="20.0" prefWidth="1920.0" progress="0.0" BorderPane.alignment="CENTER" />
+               </center>
+            </BorderPane>
+            <ToolBar nodeOrientation="RIGHT_TO_LEFT" prefHeight="40.0" prefWidth="459.0">
               <items>
-                  <Button fx:id="btnWykonaj" mnemonicParsing="false" onKeyReleased="#wykonaj" onMouseReleased="#wykonaj" prefHeight="25.0" prefWidth="100.0" text="Wykonaj" />
-                  <Button fx:id="btnStop" mnemonicParsing="false" onAction="#stop" prefHeight="25.0" prefWidth="100.0" text="Stop" />
                   <Button fx:id="btnZamknij" mnemonicParsing="false" onAction="#zamknij" prefHeight="25.0" prefWidth="100.0" text="Zamknij" />
+                  <Button fx:id="btnStop" mnemonicParsing="false" onAction="#stop" prefHeight="25.0" prefWidth="100.0" text="Stop" />
+                  <Button fx:id="btnWykonaj" mnemonicParsing="false" onKeyReleased="#wykonaj" onMouseReleased="#wykonaj" prefHeight="25.0" prefWidth="100.0" text="Wykonaj" />
               </items>
             </ToolBar>
         </items>

@@ -1,4 +1,4 @@
-package application;
+package service;
 
 public class NieZnalezionoEncjiException extends RuntimeException {
 
