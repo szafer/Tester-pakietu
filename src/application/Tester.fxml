@@ -9,7 +9,7 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.layout.AnchorPane?>
 
-<AnchorPane fx:id="mainPanel" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="600.0" minWidth="676.0" prefHeight="600.0" prefWidth="676.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="application.TesterController">
+<AnchorPane fx:id="mainPanel" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="600.0" minWidth="676.0" prefHeight="600.0" prefWidth="800.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="application.TesterController">
    <children>
       <SplitPane dividerPositions="0.5, 0.5" orientation="VERTICAL" prefHeight="600.0" prefWidth="675.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
         <items>
@@ -93,7 +93,7 @@
                <top>
                   <ProgressIndicator fx:id="piProgres" progress="0.0" BorderPane.alignment="CENTER">
                      <BorderPane.margin>
-                        <Insets top="5.0" bottom="5.0"/>
+                        <Insets bottom="5.0" top="5.0" />
                      </BorderPane.margin>
                   </ProgressIndicator>
                </top>

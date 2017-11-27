@@ -69,7 +69,7 @@ public class TesterController {
     @FXML
     private CheckBox cbWszystkie;
     @FXML
-    private Label lblProgres, lblCzas;
+    private Label lblProgres;
     @FXML
     private ProgressIndicator piProgres;
     @FXML
@@ -210,7 +210,7 @@ public class TesterController {
                     piProgres.setVisible(false);
                     piProgres.progressProperty().unbind();
                     progresBar.progressProperty().unbind();
-                    lblCzas.setText("");
+//                    lblCzas.setText("");
                     lblProgres.setText("Wykonanie nie powiodło się");
                     lblProgres.setTextFill(Color.RED);
                     break;
@@ -306,14 +306,15 @@ public class TesterController {
             && lddataDo != null) {
             Instant instant = Instant.from(lddataOd.atStartOfDay(ZoneId.systemDefault()));
             Date dataOd = Date.from(instant);
-            instant = Instant.from(lddataOd.atStartOfDay(ZoneId.systemDefault()));
+            instant = Instant.from(lddataDo.atStartOfDay(ZoneId.systemDefault()));
             Date dataDo = Date.from(instant);
             txtWynik.clear();
             komunikaty.clear();
             prepareTimeline();
             createTask();
             service.funkcja(Metoda.TESTUJ);
-            service.ustaw(cbWszystkie.isSelected() ? TESTOWANE_PAKIETY : Arrays.asList(pakiet), nagranie.getId(), zaklad, dataOd, dataDo, porzadek.getId(), osoba,
+            service.ustaw(cbWszystkie.isSelected() ? TESTOWANE_PAKIETY : Arrays.asList(pakiet), nagranie.getId(), zaklad, dataOd, dataDo, porzadek.getId(),
+                osoba == null ? -1L : osoba,
                 Integer.parseInt(liczbaIteracji));
 
             new Thread(service).start();
@@ -352,7 +353,7 @@ public class TesterController {
             btnWykonaj.setDisable(false);
             progresBar.progressProperty().unbind();
             piProgres.progressProperty().unbind();
-            lblCzas.setText("");
+//            lblCzas.setText("");
             lblProgres.setText("Anulowano");
             lblProgres.setTextFill(Color.RED);
         } else {
@@ -423,7 +424,7 @@ public class TesterController {
         czytaczLogu = new AnimationTimer() {
             @Override
             public void handle(long now) {
-                for (int i = 0; i < 10; i++) {
+                for (int i = 0; i < 20; i++) {
                     if (komunikaty.isEmpty())
                         break;
                     dodajDoLogu(komunikaty.remove());

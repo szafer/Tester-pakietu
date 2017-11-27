@@ -77,46 +77,37 @@ public class SerwisAzz08 extends Task implements ServiceTestujacy {
                 procent += wzrost;
                 poczatek = System.currentTimeMillis();
 //Operacja do wykonania      
-                try {
-                    Thread.sleep(1000);
-                } catch (InterruptedException e) {
-//                    Thread.currentThread().interrupt();
-                    // TODO Auto-generated catch block
-                    e.printStackTrace();
-                }
+                if (!entitymanager.getTransaction().isActive())
+                    entitymanager.getTransaction().begin();
+                List<Object> wynik = entitymanager.createNativeQuery("SELECT * FROM TABLE("
+                    + pakiet
+                    + ".generuj_azz08(?, ?, -1 ,?, ?, ?, ?))")
+                    .setParameter(1, nagranie)
+                    .setParameter(2, zaklad)
+                    .setParameter(3, dataOd)
+                    .setParameter(4, dataDo)
+                    .setParameter(5, uklad)
+                    .setParameter(6, osoba)
+                    .getResultList();
+//                    entitymanager.flush();
                 czas = System.currentTimeMillis() - poczatek;
 //                System.out.println("Czas: " + czas + " ");
-                komunikaty.add(pakiet + " ; iteracja " + (i + 1) + " ; " + czas / 1000.0 + "s");
+                komunikaty.add(pakiet + " ; iteracja " + (i + 1) + " ; Pobrano: " + wynik.size() + " Czas wykonania: " + czas / 1000.0 + "s");
+                entitymanager.flush();
                 updateProgress(procent, 100);
                 System.out.println(procent);
             }
             czasPakietu = System.currentTimeMillis() - poczatekPakietu;
 //            System.out.println("Czas: " + czasPakietu + " ");
             komunikaty.add(pakiet + " ; " + czasPakietu / 1000.0 + "s");
-//            System.out.println(procent);
         }
+//            System.out.println(procent);
         czasTestu = System.currentTimeMillis() - poczatekTestu;
 //        System.out.println("Czas: " + czasTestu);
         komunikaty.add("Czas testu ; " + czasTestu / 1000.0 + "s");
         updateProgress(100, 100);
-        System.out.println(100);
-        if (!entitymanager.getTransaction().isActive())
-            entitymanager.getTransaction().begin();
+        System.out.println("Koniec zapytan");
         //TODO poczatek czasu
-//        for (int i = 0; i < liczbaIteracji; i++) {
-//
-//            List<Object> wynik = entitymanager.createNativeQuery("SELECT * FROM TABLE("
-//                + pakiety
-//                + ".generuj_azz08(?, ?, -1 ,?, ?, ?, ?))")
-//                .setParameter(1, nagranie)
-//                .setParameter(2, zaklad)
-//                .setParameter(3, dataOd)
-//                .setParameter(4, dataDo)
-//                .setParameter(5, uklad)
-//                .setParameter(6, osoba)
-//                .getResultList();
-//            entitymanager.flush();
-//        }
         return null;
     }
 
