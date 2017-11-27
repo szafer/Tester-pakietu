@@ -87,23 +87,24 @@ public class TesterController {
 
     private SerwisAzz08 service;
     private static final List<String> TESTOWANE_PAKIETY = Arrays.asList("PPLC_AZZ08_TEST", "PPLC_AZZ08_TEST2", "PPLC_AZZ08_TEST3", "PPLC_AZZ08_TEST4");
+    private static final List<Long> ZAKLADY = Arrays.asList(1350L, 1941L, 1951L, 1952L, 1953L, 1954L, 1955L, 1956L, 1957L,
+        1958L, 1959L, 1960L, 1961L, 1971L, 1972L, 1973L, 1974L,
+        1981L, 1982L, 1983L, 1984L);
     private AnimationTimer czytaczLogu;
     private ConcurrentLinkedQueue<String> komunikaty = new ConcurrentLinkedQueue<String>();
+    private Task dummyTask;
 
     @SuppressWarnings("unchecked")
     public void initialize() {
+
         piProgres.setVisible(false);
         txtWynik.setWrapText(true);
         txtWynik.setEditable(false);
 
-        ObservableList<Long> zaklady = FXCollections.observableArrayList(1350L, 1941L, 1951L, 1952L, 1953L, 1954L, 1955L, 1956L, 1957L,
-            1958L, 1959L, 1960L, 1961L, 1971L, 1972L, 1973L, 1974L,
-            1981L, 1982L, 1983L, 1984L);
-        comboZaklad.setItems(zaklady);
-        ObservableList<String> pakiety = FXCollections.observableArrayList(TESTOWANE_PAKIETY);
-        comboPakiet.setItems(pakiety);
-        ObservableList<Porzadek> sort = FXCollections.observableArrayList(new Porzadek(1, "Numer pracownika"), new Porzadek(2, "Nazwisko i imi�"));
-        comboPorzadek.setItems(sort);
+        comboZaklad.setItems(FXCollections.observableArrayList(ZAKLADY));
+        comboPakiet.setItems(FXCollections.observableArrayList(TESTOWANE_PAKIETY));
+        comboPorzadek.setItems(FXCollections.observableArrayList(new Porzadek(1, "Numer pracownika"), new Porzadek(2, "Nazwisko i imi\u0119")));
+
         nbrLiczbaIteracji.textProperty().addListener(new ChangeListener<String>() {
 
             @Override
@@ -143,11 +144,11 @@ public class TesterController {
         btnStop.setDisable(true);
         btnWykonaj.setDisable(true);
         btnZapisz.setDisable(true);
-
+        createDummyTask();
     }
 
     @SuppressWarnings("unchecked")
-    private void createTask() {
+    private void createServiceTask() {
         service = new SerwisAzz08(manager, komunikaty);
         service.setOnSucceeded(new EventHandler<Event>() {
 
@@ -205,13 +206,46 @@ public class TesterController {
                     piProgres.progressProperty().unbind();
                     break;
                 case TESTUJ:
-//TODO 
                     czytaczLogu.stop();
                     piProgres.setVisible(false);
                     piProgres.progressProperty().unbind();
                     progresBar.progressProperty().unbind();
                     lblCzas.setText("");
-                    lblProgres.setText("Wykonanie nie powiodło się");
+                    lblProgres.setText("Wykonanie nie powiod\u0142o się");
+                    lblProgres.setTextFill(Color.RED);
+                    break;
+                }
+                disableButtons(false);
+            }
+
+        });
+        service.setOnFailed(new EventHandler<Event>() {
+
+            public void handle(Event event) {
+                switch (service.getFunkcja()) {
+                case POBIERZ_NAGRANIA:
+                    comboNagranie.setItems(null);
+                    comboNagranie.setDisable(true);
+                    comboPrac.setItems(null);
+                    comboPrac.setDisable(true);
+                    comboPorzadek.setDisable(true);
+                    piProgres.setVisible(false);
+                    piProgres.progressProperty().unbind();
+                    break;
+                case POBIERZ_PRACOWNIKOW:
+                    comboPrac.setItems(null);
+                    comboPrac.setDisable(true);
+                    comboPorzadek.setDisable(true);
+                    piProgres.setVisible(false);
+                    piProgres.progressProperty().unbind();
+                    break;
+                case TESTUJ:
+                    czytaczLogu.stop();
+                    piProgres.setVisible(false);
+                    piProgres.progressProperty().unbind();
+                    progresBar.progressProperty().unbind();
+                    lblCzas.setText("");
+                    lblProgres.setText("Wykonanie zosta\u0142o anulowane");
                     lblProgres.setTextFill(Color.RED);
                     break;
                 }
@@ -235,21 +269,13 @@ public class TesterController {
 //                txtWynik.appendText(newValue + System.getProperty("line.separator"));
 //            }
 //        });
-        Task t = new Task<Void>() {
-
-            @Override
-            protected Void call() throws Exception {
-                // TODO Auto-generated method stub
-                return null;
-            }
-        };
-        piProgres.progressProperty().bind(t.progressProperty());
+        piProgres.progressProperty().bind(dummyTask.progressProperty());
         piProgres.setVisible(true);
         progresBar.progressProperty().addListener(new ChangeListener<Number>() {
 
             public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
                 if (newValue.doubleValue() == 1) {
-                    lblProgres.setText("Zakończono");
+                    lblProgres.setText("Zako\u0144czono");
                     lblProgres.setTextFill(Color.GREEN);
                 } else {
                     lblProgres.setTextFill(Color.BLUE);
@@ -257,6 +283,21 @@ public class TesterController {
                 }
             }
         });
+    }
+
+    /**
+     * Metoda tworzy dummyTask, który jest bindowany do property
+     * progress indocator'a (niebieski kręciołek), kiedy program 
+     * mieli dane.
+     */
+    private void createDummyTask() {
+        dummyTask = new Task<Void>() {
+
+            @Override
+            protected Void call() throws Exception {
+                return null;
+            }
+        };
     }
 
     public void zapisz() {
@@ -311,7 +352,7 @@ public class TesterController {
             txtWynik.clear();
             komunikaty.clear();
             prepareTimeline();
-            createTask();
+            createServiceTask();
             service.funkcja(Metoda.TESTUJ);
             service.ustaw(cbWszystkie.isSelected() ? TESTOWANE_PAKIETY : Arrays.asList(pakiet), nagranie.getId(), zaklad, dataOd, dataDo, porzadek.getId(), osoba,
                 Integer.parseInt(liczbaIteracji));
@@ -364,7 +405,7 @@ public class TesterController {
     public void wybranoZaklad() {
         Long zaklad = comboZaklad.getValue();
         if (zaklad != null) {
-            createTask();
+            createServiceTask();
             service.funkcja(Metoda.POBIERZ_NAGRANIA);
             service.zaklad(zaklad);
             new Thread(service).start();
@@ -378,7 +419,7 @@ public class TesterController {
     public void wybranoNagranie() {
         Nagranie nagranie = comboNagranie.getValue();
         if (nagranie != null) {
-            createTask();
+            createServiceTask();
             service.funkcja(Metoda.POBIERZ_PRACOWNIKOW);
             service.nagranie(nagranie.getId());
             new Thread(service).start();

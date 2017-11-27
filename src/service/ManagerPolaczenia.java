@@ -12,7 +12,6 @@ public class ManagerPolaczenia {
     EntityManager entitymanager = emfactory.createEntityManager();
 
     public ManagerPolaczenia() {
-
     }
 
     public EntityManager getEntitymanager() {
