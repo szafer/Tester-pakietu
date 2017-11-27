@@ -6,7 +6,9 @@
 		<provider>org.eclipse.persistence.jpa.PersistenceProvider</provider>
 		<properties>
 			<property name="javax.persistence.jdbc.url"
-				value="jdbc:oracle:thin:@kwtdb01.coig.com:1521:pggt03" />
+							value="jdbc:oracle:thin:@localhost:1521:xe" />
+<!-- 				value="jdbc:oracle:thin:@kwtdb01.coig.com:1521:pggt03" /> -->
+			
 			<property name="javax.persistence.jdbc.user" value="PPLCADM" />
 			<property name="javax.persistence.jdbc.password" value="PPLCADM" />
 			<property name="javax.persistence.jdbc.driver" value="oracle.jdbc.OracleDriver" />
