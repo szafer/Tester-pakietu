@@ -8,14 +8,19 @@ import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.stream.Stream;
 
 import javafx.animation.AnimationTimer;
-import javafx.application.Platform;
+import javafx.beans.Observable;
+import javafx.beans.binding.Bindings;
+import javafx.beans.binding.BooleanBinding;
+import javafx.beans.property.BooleanProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
@@ -30,10 +35,12 @@ import javafx.scene.control.CheckBox;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.DatePicker;
 import javafx.scene.control.Label;
+import javafx.scene.control.ListView;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.control.ProgressIndicator;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
+import javafx.scene.control.cell.CheckBoxListCell;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
@@ -41,8 +48,10 @@ import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
+import javafx.util.Callback;
 import model.Metoda;
 import model.Nagranie;
+import model.Pakiet;
 import model.Porzadek;
 import service.ManagerPolaczenia;
 import service.SerwisAzz08;
@@ -52,8 +61,8 @@ public class TesterController {
     private TextField nbrLiczbaIteracji;
     @FXML
     private ComboBox<Long> comboZaklad, comboPrac;
-    @FXML
-    private ComboBox<String> comboPakiet;
+//    @FXML
+//    private ComboBox<String> comboPakiet;
     @FXML
     private ComboBox<Porzadek> comboPorzadek;
     @FXML
@@ -80,30 +89,62 @@ public class TesterController {
     private BorderPane panelLog;
     @FXML
     private Pane panelPostep;
+    @FXML
+    private ListView<Pakiet> listPakiety;
     private long poczatek;
     private Long czas;
     private ManagerPolaczenia manager = new ManagerPolaczenia();
     private String plikWy;
+    private BooleanBinding allSelected;
 
     private SerwisAzz08 service;
     private static final List<String> TESTOWANE_PAKIETY = Arrays.asList("PPLC_AZZ08_TEST", "PPLC_AZZ08_TEST2", "PPLC_AZZ08_TEST3", "PPLC_AZZ08_TEST4");
+    private static final List<Long> ZAKLADY = Arrays.asList(1350L, 1941L, 1951L, 1952L, 1953L, 1954L, 1955L, 1956L, 1957L,
+        1958L, 1959L, 1960L, 1961L, 1971L, 1972L, 1973L, 1974L,
+        1981L, 1982L, 1983L, 1984L);
     private AnimationTimer czytaczLogu;
     private ConcurrentLinkedQueue<String> komunikaty = new ConcurrentLinkedQueue<String>();
+    private Task dummyTask;
 
     @SuppressWarnings("unchecked")
     public void initialize() {
+
         piProgres.setVisible(false);
         txtWynik.setWrapText(true);
         txtWynik.setEditable(false);
 
-        ObservableList<Long> zaklady = FXCollections.observableArrayList(1350L, 1941L, 1951L, 1952L, 1953L, 1954L, 1955L, 1956L, 1957L,
-            1958L, 1959L, 1960L, 1961L, 1971L, 1972L, 1973L, 1974L,
-            1981L, 1982L, 1983L, 1984L);
-        comboZaklad.setItems(zaklady);
-        ObservableList<String> pakiety = FXCollections.observableArrayList(TESTOWANE_PAKIETY);
-        comboPakiet.setItems(pakiety);
-        ObservableList<Porzadek> sort = FXCollections.observableArrayList(new Porzadek(1, "Numer pracownika"), new Porzadek(2, "Nazwisko i imi�"));
-        comboPorzadek.setItems(sort);
+        comboZaklad.setItems(FXCollections.observableArrayList(ZAKLADY));
+//        comboPakiet.setItems(FXCollections.observableArrayList(TESTOWANE_PAKIETY));
+        comboPorzadek.setItems(FXCollections.observableArrayList(new Porzadek(1, "Numer pracownika"), new Porzadek(2, "Nazwisko i imi\u0119")));
+        Pakiet[] list = new Pakiet[5];
+        for (int i = 0; i <= 4; i++) {
+            Pakiet item = new Pakiet("PPLC_AZZ08_TEST" + (i + 1), true);
+            list[i] = item;
+            // observe item's on property and display message if it changes:
+//            item.onProperty().addListener((obs, wasOn, isNowOn) -> {
+//                System.out.println(item.getName() + " changed on state from " + wasOn + " to " + isNowOn);
+//
+//            });
+            item.onProperty().addListener(new ChangeListener<Boolean>() {
+
+                @Override
+                public void changed(ObservableValue<? extends Boolean> obs, Boolean wasOn, Boolean isNowOn) {
+                    System.out.println(item.getName() + " changed on state from " + wasOn + " to " + isNowOn);
+                    ustawBtnWykonaj();
+
+                }
+            });
+            listPakiety.getItems().add(item);
+        }
+
+        listPakiety.setCellFactory(CheckBoxListCell.forListView(new Callback<Pakiet, ObservableValue<Boolean>>() {
+            @Override
+            public ObservableValue<Boolean> call(Pakiet item) {
+                return item.onProperty();
+            }
+        }));
+        bindPanelToPackages(cbWszystkie, list);
+        listPakiety.setDisable(true);
         nbrLiczbaIteracji.textProperty().addListener(new ChangeListener<String>() {
 
             @Override
@@ -136,18 +177,49 @@ public class TesterController {
                 }
             }
         });
+        cbWszystkie.selectedProperty().addListener(new ChangeListener<Boolean>() {
+
+            @Override
+            public void changed(ObservableValue<? extends Boolean> observable, Boolean oldValue, Boolean newValue) {
+                // TODO Auto-generated method stub
+                listPakiety.setDisable(cbWszystkie.isSelected());
+
+            }
+        });
         comboNagranie.setDisable(true);
         comboPrac.setDisable(true);
         comboPorzadek.setDisable(true);
-        comboPakiet.setDisable(true);
+//        comboPakiet.setDisable(true);
         btnStop.setDisable(true);
         btnWykonaj.setDisable(true);
         btnZapisz.setDisable(true);
+        createDummyTask();
+    }
+
+    private void bindPanelToPackages(CheckBox pane, Pakiet... packages) {
+
+        // BooleanBinding that is true if and only if all check boxes in
+        // packages are selected:
+        allSelected = Bindings.createBooleanBinding(() ->
+        // compute value of binding:
+        Stream.of(packages).allMatch(Pakiet::isOn),
+            // array of thing to observe to recompute binding - this gives
+            // the array
+            // of all the check boxes' selectedProperty()s.
+            Stream.of(packages).map(Pakiet::onProperty).toArray(Observable[]::new));
+
+        // update pane's selected property if binding defined above changes
+        allSelected.addListener((obs, wereAllSelected, areAllNowSelected) -> pane.setSelected(areAllNowSelected));
+
+        // use an action listener to listen for a direct action on pane, and
+        // update all checkboxes
+        // in packages if this happens:
+        pane.setOnAction(e -> Stream.of(packages).forEach(box -> box.setOn(pane.isSelected())));
 
     }
 
     @SuppressWarnings("unchecked")
-    private void createTask() {
+    private void createServiceTask() {
         service = new SerwisAzz08(manager, komunikaty);
         service.setOnSucceeded(new EventHandler<Event>() {
 
@@ -205,13 +277,11 @@ public class TesterController {
                     piProgres.progressProperty().unbind();
                     break;
                 case TESTUJ:
-//TODO 
                     czytaczLogu.stop();
                     piProgres.setVisible(false);
                     piProgres.progressProperty().unbind();
                     progresBar.progressProperty().unbind();
-//                    lblCzas.setText("");
-                    lblProgres.setText("Wykonanie nie powiodło się");
+                    lblProgres.setText("Wykonanie zosta\u0142o anulowane");
                     lblProgres.setTextFill(Color.RED);
                     break;
                 }
@@ -235,21 +305,13 @@ public class TesterController {
 //                txtWynik.appendText(newValue + System.getProperty("line.separator"));
 //            }
 //        });
-        Task t = new Task<Void>() {
-
-            @Override
-            protected Void call() throws Exception {
-                // TODO Auto-generated method stub
-                return null;
-            }
-        };
-        piProgres.progressProperty().bind(t.progressProperty());
+        piProgres.progressProperty().bind(dummyTask.progressProperty());
         piProgres.setVisible(true);
         progresBar.progressProperty().addListener(new ChangeListener<Number>() {
 
             public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
                 if (newValue.doubleValue() == 1) {
-                    lblProgres.setText("Zakończono");
+                    lblProgres.setText("Zako\u0144czono");
                     lblProgres.setTextFill(Color.GREEN);
                 } else {
                     lblProgres.setTextFill(Color.BLUE);
@@ -257,6 +319,21 @@ public class TesterController {
                 }
             }
         });
+    }
+
+    /**
+     * Metoda tworzy dummyTask, który jest bindowany do property
+     * progress indocator'a (niebieski kręciołek), kiedy program 
+     * mieli dane.
+     */
+    private void createDummyTask() {
+        dummyTask = new Task<Void>() {
+
+            @Override
+            protected Void call() throws Exception {
+                return null;
+            }
+        };
     }
 
     public void zapisz() {
@@ -298,23 +375,23 @@ public class TesterController {
         Nagranie nagranie = comboNagranie.getValue();
         Long osoba = comboPrac.getValue();
         Porzadek porzadek = comboPorzadek.getValue();
-        String pakiet = comboPakiet.getValue();
+//        String pakiet = comboPakiet.getValue();
         String liczbaIteracji = nbrLiczbaIteracji.getText();
         LocalDate lddataOd = dtDataOd.getValue();
         LocalDate lddataDo = dtDataDo.getValue();
-        if (zaklad != null && nagranie != null && porzadek != null && liczbaIteracji != null && (cbWszystkie.isSelected() || pakiet != null) && lddataOd != null
+        if (zaklad != null && nagranie != null && porzadek != null && liczbaIteracji != null
+            && listPakiety.getSelectionModel().getSelectedItems().size() > 0 && lddataOd != null
             && lddataDo != null) {
             Instant instant = Instant.from(lddataOd.atStartOfDay(ZoneId.systemDefault()));
             Date dataOd = Date.from(instant);
-            instant = Instant.from(lddataDo.atStartOfDay(ZoneId.systemDefault()));
+            instant = Instant.from(lddataOd.atStartOfDay(ZoneId.systemDefault()));
             Date dataDo = Date.from(instant);
             txtWynik.clear();
             komunikaty.clear();
             prepareTimeline();
-            createTask();
+            createServiceTask();
             service.funkcja(Metoda.TESTUJ);
-            service.ustaw(cbWszystkie.isSelected() ? TESTOWANE_PAKIETY : Arrays.asList(pakiet), nagranie.getId(), zaklad, dataOd, dataDo, porzadek.getId(),
-                osoba == null ? -1L : osoba,
+            service.ustaw(Arrays.asList(listPakiety.getSelectionModel().getSelectedItems().toString()), nagranie.getId(), zaklad, dataOd, dataDo, porzadek.getId(), osoba,
                 Integer.parseInt(liczbaIteracji));
 
             new Thread(service).start();
@@ -345,6 +422,7 @@ public class TesterController {
             || comboNagranie.getValue() == null
             || comboPorzadek.getValue() == null
             || nbrLiczbaIteracji.getText() == null
+            || listPakiety.getSelectionModel().getSelectedItems().size() == 0
             || (service != null && service.getState() == State.RUNNING));
     }
 
@@ -353,7 +431,6 @@ public class TesterController {
             btnWykonaj.setDisable(false);
             progresBar.progressProperty().unbind();
             piProgres.progressProperty().unbind();
-//            lblCzas.setText("");
             lblProgres.setText("Anulowano");
             lblProgres.setTextFill(Color.RED);
         } else {
@@ -365,7 +442,7 @@ public class TesterController {
     public void wybranoZaklad() {
         Long zaklad = comboZaklad.getValue();
         if (zaklad != null) {
-            createTask();
+            createServiceTask();
             service.funkcja(Metoda.POBIERZ_NAGRANIA);
             service.zaklad(zaklad);
             new Thread(service).start();
@@ -379,7 +456,7 @@ public class TesterController {
     public void wybranoNagranie() {
         Nagranie nagranie = comboNagranie.getValue();
         if (nagranie != null) {
-            createTask();
+            createServiceTask();
             service.funkcja(Metoda.POBIERZ_PRACOWNIKOW);
             service.nagranie(nagranie.getId());
             new Thread(service).start();
@@ -405,10 +482,10 @@ public class TesterController {
 
     }
 
-    @FXML
-    public void zmienionoPakiety() {
-        comboPakiet.setDisable(cbWszystkie.isSelected());
-    }
+//    @FXML
+//    public void zmienionoPakiety() {
+//        comboPakiet.setDisable(cbWszystkie.isSelected());
+//    }
 
     @FXML
     public void wyczysc() {
@@ -424,7 +501,7 @@ public class TesterController {
         czytaczLogu = new AnimationTimer() {
             @Override
             public void handle(long now) {
-                for (int i = 0; i < 20; i++) {
+                for (int i = 0; i < 10; i++) {
                     if (komunikaty.isEmpty())
                         break;
                     dodajDoLogu(komunikaty.remove());

@@ -4,7 +4,7 @@ import java.util.List;
 
 import model.Nagranie;
 
-public interface ServiceTestujacy {
+public interface SerwisTestujacy {
 
     String testuj();
 

@@ -8,17 +8,12 @@ import java.util.Random;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.Persistence;
-import javax.persistence.PersistenceContext;
 
-import javafx.application.Platform;
 import javafx.concurrent.Task;
-import javafx.scene.chart.XYChart.Data;
 import model.Metoda;
 import model.Nagranie;
 
-public class SerwisAzz08 extends Task implements ServiceTestujacy {
+public class SerwisAzz08 extends Task implements SerwisTestujacy {
 
     private EntityManager entitymanager;
     private List<String> pakiety;
@@ -146,10 +141,6 @@ public class SerwisAzz08 extends Task implements ServiceTestujacy {
 
     @Override
     public Object call() throws Exception {
-        if (funkcja == null) {
-            System.out.println("Pierwsze wykonanie ");
-            return null;
-        }
         switch (funkcja) {
         case POBIERZ_NAGRANIA:
             return pobierzNagrania();
