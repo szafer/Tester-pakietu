@@ -76,31 +76,37 @@ public class SerwisAzz08 extends Task implements SerwisTestujacy {
                     entitymanager.getTransaction().begin();
                 List<Object> wynik = entitymanager.createNativeQuery("SELECT * FROM TABLE("
                     + pakiet
-                    + ".generuj_azz08(?, ?, -1 ,?, ?, ?, ?))")
+                    + ".generuj_azz08(?, ?, -1 , ?, ?, ?, ?))")
                     .setParameter(1, nagranie)
                     .setParameter(2, zaklad)
                     .setParameter(3, dataOd)
                     .setParameter(4, dataDo)
                     .setParameter(5, uklad)
-                    .setParameter(6, osoba)
+                    .setParameter(6, osoba == null ? -1 : osoba)
                     .getResultList();
 //                    entitymanager.flush();
                 czas = System.currentTimeMillis() - poczatek;
 //                System.out.println("Czas: " + czas + " ");
-                komunikaty.add(pakiet + " ; iteracja " + (i + 1) + " ; Pobrano: " + wynik.size() + " Czas wykonania: " + czas / 1000.0 + "s");
+                komunikaty.add(pakiet + " | Iteracja | " + (i + 1) + " | Pobrano | " + wynik.size() + " | Czas wykonania | " + czas / 1000.0 + "s");
                 entitymanager.flush();
                 updateProgress(procent, 100);
                 System.out.println(procent);
             }
             czasPakietu = System.currentTimeMillis() - poczatekPakietu;
 //            System.out.println("Czas: " + czasPakietu + " ");
-            komunikaty.add(pakiet + " ; " + czasPakietu / 1000.0 + "s");
+            komunikaty.add(pakiet + " | " + czasPakietu / 1000.0 + "s");
         }
 //            System.out.println(procent);
         czasTestu = System.currentTimeMillis() - poczatekTestu;
 //        System.out.println("Czas: " + czasTestu);
-        komunikaty.add("Czas testu ; " + czasTestu / 1000.0 + "s");
+        komunikaty.add("| Czas testu |" + czasTestu / 1000.0 + "s");
         updateProgress(100, 100);
+        try {
+            Thread.sleep(500);
+        } catch (InterruptedException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
         System.out.println("Koniec zapytan");
         //TODO poczatek czasu
         return null;
@@ -115,7 +121,7 @@ public class SerwisAzz08 extends Task implements SerwisTestujacy {
             entitymanager.getTransaction().begin();
         List<Object[]> wynik = (List<Object[]>) entitymanager
             .createNativeQuery("select nagranie_Id, count(distinct osoba_Id) liczba "
-                + " from pczk_v_dostepne_osoby_raportu where zaklad_Id = ? "
+                + " from pczk_v_dostepne_osoby_rap_test where zaklad_Id = ? "
                 + " group by nagranie_id order by 2 desc ")
             .setParameter(1, zaklad)
             .getResultList();
@@ -131,7 +137,7 @@ public class SerwisAzz08 extends Task implements SerwisTestujacy {
     public List<Long> pobierzIdentyfikatoryOsob() {
         List<BigDecimal> wynik = (List<BigDecimal>) entitymanager
             .createNativeQuery("select osoba_id "
-                + " from pczk_v_dostepne_osoby_raportu where nagranie_id = ?  ")
+                + " from pczk_v_dostepne_osoby_rap_test where nagranie_id = ?  ")
             .setParameter(1, nagranie)
             .getResultList();
         List<Long> wynik2 = new ArrayList<>(wynik.size());

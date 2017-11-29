@@ -118,7 +118,7 @@ public class TesterController {
         comboPorzadek.setItems(FXCollections.observableArrayList(new Porzadek(1, "Numer pracownika"), new Porzadek(2, "Nazwisko i imi\u0119")));
         Pakiet[] list = new Pakiet[5];
         for (int i = 0; i <= 4; i++) {
-            Pakiet item = new Pakiet("PPLC_AZZ08_TEST" + (i + 1), true);
+            Pakiet item = new Pakiet("PPLC_AZZ08_TEST" + (i > 0 ? i : ""), true);
             list[i] = item;
             // observe item's on property and display message if it changes:
 //            item.onProperty().addListener((obs, wasOn, isNowOn) -> {
@@ -228,6 +228,7 @@ public class TesterController {
                     switch (service.getFunkcja()) {
                     case POBIERZ_NAGRANIA:
                         ObservableList<Nagranie> nagrania = FXCollections.observableArrayList((List<Nagranie>) service.getValue());//returns 2 or raises an exception if the thread dies, so safer
+                        comboZaklad.setDisable(false);
                         comboNagranie.setItems(nagrania);
                         comboNagranie.setDisable(false);
                         piProgres.setVisible(false);
@@ -235,6 +236,8 @@ public class TesterController {
                         break;
                     case POBIERZ_PRACOWNIKOW:
                         ObservableList<Long> osoby = FXCollections.observableArrayList((List<Long>) service.getValue());
+                        comboNagranie.setDisable(false);
+                        comboPrac.setValue(null);
                         comboPrac.setItems(osoby);
                         comboPrac.setDisable(false);
                         comboPorzadek.setDisable(false);
@@ -242,7 +245,9 @@ public class TesterController {
                         piProgres.progressProperty().unbind();
                         break;
                     case TESTUJ:
+
                         czytaczLogu.stop();
+
                         piProgres.setVisible(false);
                         piProgres.progressProperty().unbind();
                         progresBar.progressProperty().unbind();
@@ -254,6 +259,7 @@ public class TesterController {
                 System.out.println("Czas: " + czas);
 //              lblCzas.setText("Czas: " + czas + " ms");
                 disableButtons(false);
+                //ustawBtnWykonaj();
             }
         });
         service.setOnFailed(new EventHandler<Event>() {
@@ -261,6 +267,7 @@ public class TesterController {
             public void handle(Event event) {
                 switch (service.getFunkcja()) {
                 case POBIERZ_NAGRANIA:
+                    comboZaklad.setDisable(false);
                     comboNagranie.setItems(null);
                     comboNagranie.setDisable(true);
                     comboPrac.setItems(null);
@@ -270,6 +277,7 @@ public class TesterController {
                     piProgres.progressProperty().unbind();
                     break;
                 case POBIERZ_PRACOWNIKOW:
+                    comboNagranie.setDisable(false);
                     comboPrac.setItems(null);
                     comboPrac.setDisable(true);
                     comboPorzadek.setDisable(true);
@@ -277,7 +285,6 @@ public class TesterController {
                     piProgres.progressProperty().unbind();
                     break;
                 case TESTUJ:
-                    czytaczLogu.stop();
                     piProgres.setVisible(false);
                     piProgres.progressProperty().unbind();
                     progresBar.progressProperty().unbind();
@@ -286,6 +293,7 @@ public class TesterController {
                     break;
                 }
                 disableButtons(false);
+                czytaczLogu.stop();
             }
 
         });
@@ -380,7 +388,7 @@ public class TesterController {
         LocalDate lddataOd = dtDataOd.getValue();
         LocalDate lddataDo = dtDataDo.getValue();
         if (zaklad != null && nagranie != null && porzadek != null && liczbaIteracji != null
-            && listPakiety.getSelectionModel().getSelectedItems().size() > 0 && lddataOd != null
+            && listPakiety.getItems().stream().anyMatch(Pakiet::isOn) && lddataOd != null
             && lddataDo != null) {
             Instant instant = Instant.from(lddataOd.atStartOfDay(ZoneId.systemDefault()));
             Date dataOd = Date.from(instant);
@@ -391,7 +399,12 @@ public class TesterController {
             prepareTimeline();
             createServiceTask();
             service.funkcja(Metoda.TESTUJ);
-            service.ustaw(Arrays.asList(listPakiety.getSelectionModel().getSelectedItems().toString()), nagranie.getId(), zaklad, dataOd, dataDo, porzadek.getId(), osoba,
+            List<String> l2 = new ArrayList<String>();
+            listPakiety.getItems().forEach(e -> {
+                if (e.isOn())
+                    l2.add(e.toString());
+            });
+            service.ustaw(l2, nagranie.getId(), zaklad, dataOd, dataDo, porzadek.getId(), osoba,
                 Integer.parseInt(liczbaIteracji));
 
             new Thread(service).start();
@@ -421,8 +434,9 @@ public class TesterController {
             || comboZaklad.getValue() == null
             || comboNagranie.getValue() == null
             || comboPorzadek.getValue() == null
-            || nbrLiczbaIteracji.getText() == null
-            || listPakiety.getSelectionModel().getSelectedItems().size() == 0
+            || nbrLiczbaIteracji.getText() == null || nbrLiczbaIteracji.getText().isEmpty()
+            || listPakiety.getItems().stream().allMatch(Pakiet::isOFF)
+            //            || Stream.of( listPakiety.getItems()).allMatch(Pakiet::isOn)
             || (service != null && service.getState() == State.RUNNING));
     }
 
@@ -442,6 +456,7 @@ public class TesterController {
     public void wybranoZaklad() {
         Long zaklad = comboZaklad.getValue();
         if (zaklad != null) {
+            comboZaklad.setDisable(true);
             createServiceTask();
             service.funkcja(Metoda.POBIERZ_NAGRANIA);
             service.zaklad(zaklad);
@@ -456,6 +471,7 @@ public class TesterController {
     public void wybranoNagranie() {
         Nagranie nagranie = comboNagranie.getValue();
         if (nagranie != null) {
+            comboNagranie.setDisable(true);
             createServiceTask();
             service.funkcja(Metoda.POBIERZ_PRACOWNIKOW);
             service.nagranie(nagranie.getId());
@@ -501,7 +517,7 @@ public class TesterController {
         czytaczLogu = new AnimationTimer() {
             @Override
             public void handle(long now) {
-                for (int i = 0; i < 10; i++) {
+                for (int i = 0; i < 20; i++) {
                     if (komunikaty.isEmpty())
                         break;
                     dodajDoLogu(komunikaty.remove());

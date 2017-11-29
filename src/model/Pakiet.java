@@ -34,6 +34,10 @@ public class Pakiet {
         return this.onProperty().get();
     }
 
+    public final boolean isOFF() {
+        return !this.onProperty().get();
+    }
+
     public final void setOn(final boolean on) {
         this.onProperty().set(on);
     }
